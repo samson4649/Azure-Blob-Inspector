@@ -114,10 +114,15 @@ class AzureClient(object):
 
     def List(self):
         data = []
-        for b in xmltodict.parse( client.get(f"{self.url}?restype=container&comp=list").content )["EnumerationResults"]["Blobs"]["Blob"]:
-            b["Account"] = self.name
-            b["Container"] = self.container
-            data += [AzureFile(**b)]
+        d = xmltodict.parse( client.get(f"{self.url}?restype=container&comp=list").content )
+        try:
+            for b in d["EnumerationResults"]["Blobs"]["Blob"]:
+                b["Account"] = self.name
+                b["Container"] = self.container
+                data += [AzureFile(**b)]
+        except Exception as e:
+            print(d)
+            raise e
         return AzureFileBase(data)
 
     def IncludeExt(self, exts):
@@ -153,7 +158,8 @@ if __name__ == "__main__":
     parser.add_argument("--exts", action='store_true', help = "List all file extensions in use")
     parser.add_argument("--output","-o", type = str, help = "Directory to save files to", default = "./loot_new")
     parser.add_argument("--regex", action='store_true', help = "Interpret search string as regex")
-    parser.add_argument("search",default='', help="Phrase to search for")
+    parser.add_argument("--search", default='', help = "Search string")
+    # parser.add_argument("search",default='', help="Phrase to search for")
     args = parser.parse_args()
 
     # account_name = "blobpdtaus2"
